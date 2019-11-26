@@ -7,8 +7,6 @@ noinst_LTLIBRARIES += %D%/libocdflashnor.la
 	$(NORHEADERS)
 
 NOR_DRIVERS = \
-        %D%/pac52xx.c \
-	%D%/pac55xx.c \
 	%D%/aduc702x.c \
 	%D%/aducm360.c \
 	%D%/ambiqmicro.c \
@@ -49,6 +47,8 @@ NOR_DRIVERS = \
 	%D%/nrf5.c \
 	%D%/numicro.c \
 	%D%/ocl.c \
+        %D%/pac52xx.c \
+	%D%/pac55xx.c \
 	%D%/pic32mx.c \
 	%D%/psoc4.c \
 	%D%/psoc5lp.c \

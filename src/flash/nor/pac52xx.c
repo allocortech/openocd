@@ -320,7 +320,7 @@ COMMAND_HANDLER(pac525xx_handle_mass_erase_command)
 	int i;
 
 	if (CMD_ARGC < 1) {
-		command_print(CMD_CTX, "pac52xx mass_erase <bank>");
+		command_print(CMD, "pac52xx mass_erase <bank>");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -336,9 +336,9 @@ COMMAND_HANDLER(pac525xx_handle_mass_erase_command)
 		for (i = 0; i < bank->num_sectors; i++)
 			bank->sectors[i].is_erased = 1;
 
-		command_print(CMD_CTX, "pac52xx mass erase complete");
+		command_print(CMD, "pac52xx mass erase complete");
 	} else {
-		command_print(CMD_CTX, "pac52xx mass erase failed");
+		command_print(CMD, "pac52xx mass erase failed");
 	}
 
 	return retval;

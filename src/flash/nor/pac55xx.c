@@ -265,8 +265,7 @@ static int pac55xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
 	struct target *target = bank->target;
     int retval;
     uint32_t size_bytes = count;
-    uint8_t *p_src = (uint8_t *)buffer;
-    uint8_t *p_dest = (uint8_t *)offset;
+    const uint8_t *p_src = (const uint8_t *)buffer;
     union {
         uint8_t b[16];
         uint32_t w[4];
@@ -274,8 +273,7 @@ static int pac55xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
     uint8_t i;
     uint32_t src_index;
     uint8_t buff_index;
-    uint32_t *p_flash_write;
-    uint32_t address;
+
     
 	// Make sure target is halted
 	if( bank->target->state != TARGET_HALTED ) 
@@ -296,16 +294,16 @@ static int pac55xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
     
     
     // Set FLASHLOCK to allow Writes to Flash
-    //PAC55XX_MEMCTL->FLASHLOCK = FLASH_LOCK_ALLOW_WRITE_ERASE_FLASH;
     retval = target_write_u32( target, PAC55XX_MEMCTL_FLASHLOCK, FLASH_LOCK_ALLOW_WRITE_ERASE_FLASH );
     if (retval != ERROR_OK)
         return retval;
-            
-    // Set pointer for Flash writes to 16 byte boundary;  All flash writes must start on a 16-byte boundary and consist of 16 bytes in size
-    p_flash_write = (uint32_t *)((uint32_t)p_dest & ~0xF);
+
+    // Set address for Flash writes to 16 byte boundary;  
+    // All flash writes must start on a 16-byte boundary and consist of 16 bytes in size
+    uint32_t address = offset & ~0xF;
 
     // buff_index points to the first byte to contain valid data
-    buff_index = (uint32_t)p_dest & 0xF;
+    buff_index = offset & 0xF;
 
     // Fill 16 byte temp buffer with FFs up to buff_index (must write FFs to bytes that shouldn't change)
     for(i=0; i < buff_index; i++)
@@ -326,9 +324,8 @@ static int pac55xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
             // Write 4 words (16 bytes) to Flash
             for(i=0; i < 4; i++)
             {
-                //*p_flash_write++ = buff.w[i];
-                address = (uint32_t)p_flash_write++;
-                target_write_u32( target, address, buff.w[i] );                
+                target_write_u32(target, address, buff.w[i] );                
+                address += sizeof(uint32_t);
             }
 
             // Wait for Write to complete or time out
@@ -352,9 +349,8 @@ static int pac55xx_write(struct flash_bank *bank, const uint8_t *buffer, uint32_
         // Write final 4 32-bit words (16 bytes) to Flash
         for(i=0; i < 4; i++)
         {
-            //*p_flash_write++ = buff.w[i];
-            address = (uint32_t)p_flash_write++;
             target_write_u32( target, address, buff.w[i] );
+            address += sizeof(uint32_t);
         }
         // Wait for Write to complete or time out
         retval = pac55xx_wait_status_busy( bank, FLASH_WRITE_TIMEOUT );
@@ -471,7 +467,7 @@ COMMAND_HANDLER(pac55xx_handle_mass_erase_command)
 	int i;
 
 	if (CMD_ARGC < 1) {
-		command_print(CMD_CTX, "pac55xx mass_erase <bank>");
+		command_print(CMD, "pac55xx mass_erase <bank>");
 		return ERROR_COMMAND_SYNTAX_ERROR;
 	}
 
@@ -486,9 +482,9 @@ COMMAND_HANDLER(pac55xx_handle_mass_erase_command)
 		for (i = 0; i < bank->num_sectors; i++)
 			bank->sectors[i].is_erased = 1;
 
-		command_print(CMD_CTX, "pac55xx mass erase complete");
+		command_print(CMD, "pac55xx mass erase complete");
 	} else {
-		command_print(CMD_CTX, "pac55xx mass erase failed");
+		command_print(CMD, "pac55xx mass erase failed");
 	}
 
 	return retval;
